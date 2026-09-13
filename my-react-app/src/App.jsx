@@ -195,13 +195,13 @@ export default function App() {
                   type="number" 
                   min="0" 
                   value={p.at} 
-                  onChange={(e) => updateProcessField(idx, 'at', parseInt(e.target.value) || 0)} 
+                  onChange={(e) => updateProcessField(idx, 'at', e.target.value)} 
                 />
                 <input 
                   type="number" 
                   min="1" 
                   value={p.bt} 
-                  onChange={(e) => updateProcessField(idx, 'bt', parseInt(e.target.value) || 1)} 
+                  onChange={(e) => updateProcessField(idx, 'bt', e.target.value)} 
                 />
               </div>
             ))}
@@ -246,8 +246,8 @@ export default function App() {
                   </tr>
                 </thead>
                 <tbody>
-                  {Array.from({ length: Math.max(...results.processes.map(p => p.at)) + 1 }, (_, t) => {
-                    const match = results.processes.find(p => p.at === t);
+                  {Array.from({ length: Math.max(...results.processes.map(p => Number(p.at))) + 1 }, (_, t) => {
+                    const match = results.processes.find(p => Number(p.at) === t);
                     return (
                       <tr key={t}>
                         <td><b>{t}</b></td>
