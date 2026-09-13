@@ -1,0 +1,11 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Open CPU Scheduler HTML",
+            "file": "C:/Users/Shayne Martija/Downloads/cpu_scheduler.html"
+        }
+    ]
+}

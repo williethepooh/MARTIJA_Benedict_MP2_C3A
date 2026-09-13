@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPU CoreSim - Advanced Scheduling Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-light: #e0e7ff;
+            --bg-main: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --input-bg: #0f172a;
+            --accent-glow: rgba(99, 102, 241, 0.2);
+            --danger: #f43f5e;
+            --body-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --metric-bg: linear-gradient(135deg, #1e293b 100%, #0f172a 0%);
+            --th-bg: #0f172a;
+            --row-bg: #0f172a;
+        }
+
+        [data-theme="light"] {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: #e0e7ff;
+            --bg-main: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #cbd5e1;
+            --input-bg: #f8fafc;
+            --accent-glow: rgba(79, 70, 229, 0.15);
+            --danger: #ef4444;
+            --body-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --metric-bg: linear-gradient(135deg, #ffffff 100%, #f8fafc 0%);
+            --th-bg: #f1f5f9;
+            --row-bg: #f8fafc;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--body-gradient);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .app-header {
+            text-align: center;
+            margin-bottom: 35px;
+            position: relative;
+        }
+
+        .theme-toggle-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 10px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle-btn:hover {
+            border-color: var(--primary);
+        }
+
+        .app-header h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0 0 8px 0;
+            letter-spacing: -0.025em;
+        }
+
+        .app-header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid var(--primary);
+            padding-left: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 16px;
+            align-items: end;
+        }
+
+        .form-group {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            box-sizing: border-box;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            background: var(--input-bg);
+            color: var(--text-main);
+            transition: all 0.2s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: filter 0.2s, transform 0.1s;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            filter: brightness(1.1);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .process-table-headers {
+            display: grid;
+            grid-template-columns: 1.2fr 2fr 2fr;
+            gap: 16px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+            padding: 0 4px;
+        }
+
+        .process-row {
+            display: grid;
+            grid-template-columns: 1.2fr 2fr 2fr;
+            gap: 16px;
+            margin-bottom: 12px;
+            background: var(--row-bg);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            align-items: center;
+        }
+
+        .error-banner {
+            background: rgba(244, 63, 94, 0.15);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        #outputSection {
+            display: none;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: var(--metric-bg);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .metric-card .value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-top: 4px;
+        }
+
+        .metric-card .label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            padding: 14px 18px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+
+        th {
+            background: var(--th-bg);
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            background: var(--accent-glow);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .gantt-container {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        .gantt-timeline-track {
+            display: flex;
+            gap: 10px;
+            min-width: min-content;
+        }
+
+        .gantt-block {
+            color: white;
+            border-radius: 8px;
+            padding: 14px 20px;
+            text-align: center;
+            min-width: 60px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .gantt-block .pid {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .gantt-block .bt {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            margin-top: 2px;
+        }
+
+        .gantt-axis {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 10px;
+            padding: 0 4px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body data-theme="dark">
+
+<div class="app-container">
+    <div class="app-header">
+        <button class="theme-toggle-btn" onclick="toggleTheme()">
+            <span id="themeIcon">☀️</span> <span id="themeText">Light Mode</span>
+        </button>
+        <h1>CPU CoreSim</h1>
+        <p>Interactive Non-Preemptive FCFS & SJF Simulator</p>
+    </div>
+    
+    <div class="card">
+        <div class="card-title">Setup Configuration</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="numProc">Number of Processes (3 to 10)</label>
+                <input type="number" id="numProc" min="3" max="10" value="5">
+            </div>
+            <button class="btn" onclick="renderProcessInputs()">Next Step</button>
+        </div>
+    </div>
+
+    <div id="dynamicFormContainer" class="card" style="display:none;">
+        <div class="card-title">Process Parameters</div>
+        <div id="errorBanner" class="error-banner"></div>
+        <div class="process-table-headers">
+            <div>Process ID</div>
+            <div>Arrival Time (AT)</div>
+            <div>Burst Time (BT)</div>
+        </div>
+        <div id="processInputsList"></div>
+        
+        <div style="margin-top: 24px;" class="form-group">
+            <label for="algorithm">Scheduling Algorithm</label>
+            <select id="algorithm">
+                <option value="1">First Come First Serve (FCFS)</option>
+                <option value="2">Shortest Job First (SJF - Non-Preemptive)</option>
+            </select>
+        </div>
+
+        <div style="margin-top: 24px;">
+            <button class="btn" style="width: 100%;" onclick="runSimulation()">Run Simulation & Generate Report</button>
+        </div>
+    </div>
+
+    <div id="outputSection">
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="label">Average Waiting Time</div>
+                <div class="value" id="avgWtVal">0.00</div>
+            </div>
+            <div class="metric-card">
+                <div class="label">Average Turnaround Time</div>
+                <div class="value" id="avgTatVal">0.00</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">1st Step: Ready Queue Breakdown</div>
+            <div id="rqTableContainer"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">2nd Step: Gantt Chart Visualization</div>
+            <div id="ganttContainer"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">3rd & 4th Step: Detailed Metrics Matrix</div>
+            <div id="detailTableContainer"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const colorPalette = [
+    'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)',
+    'linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)',
+    'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+    'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+    'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
+    'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+    'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
+    'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)'
+];
+
+function toggleTheme() {
+    const body = document.body;
+    const themeIcon = document.getElementById('themeIcon');
+    const themeText = document.getElementById('themeText');
+    
+    if (body.getAttribute('data-theme') === 'dark') {
+        body.setAttribute('data-theme', 'light');
+        themeIcon.innerText = '🌙';
+        themeText.innerText = 'Dark Mode';
+    } else {
+        body.setAttribute('data-theme', 'dark');
+        themeIcon.innerText = '☀️';
+        themeText.innerText = 'Light Mode';
+    }
+}
+
+function showError(msg) {
+    const banner = document.getElementById('errorBanner');
+    banner.innerText = msg;
+    banner.style.display = 'block';
+    banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function hideError() {
+    const banner = document.getElementById('errorBanner');
+    banner.style.display = 'none';
+}
+
+function renderProcessInputs() {
+    hideError();
+    const n = parseInt(document.getElementById('numProc').value);
+    const container = document.getElementById('processInputsList');
+    container.innerHTML = '';
+
+    if (isNaN(n) || n < 3 || n > 10) {
+        showError("Please enter a valid number of processes between 3 and 10.");
+        return;
+    }
+
+    let html = '';
+    for (let i = 0; i < n; i++) {
+        html += `<div class="process-row">
+            <input type="text" id="pid_${i}" value="P${i+1}" placeholder="ID">
+            <input type="number" id="at_${i}" value="${i === 0 ? 0 : i * 2}" min="0" placeholder="Arrival Time">
+            <input type="number" id="bt_${i}" value="${Math.floor(Math.random() * 6) + 3}" min="1" placeholder="Burst Time">
+        </div>`;
+    }
+
+    container.innerHTML = html;
+    document.getElementById('dynamicFormContainer').style.display = 'block';
+    document.getElementById('outputSection').style.display = 'none';
+    document.getElementById('dynamicFormContainer').scrollIntoView({ behavior: 'smooth' });
+}
+
+function runSimulation() {
+    hideError();
+    const n = parseInt(document.getElementById('numProc').value);
+    let processes = [];
+    let pids = new Set();
+    let ats = new Set();
+
+    for (let i = 0; i < n; i++) {
+        let pid = document.getElementById(`pid_${i}`).value.trim();
+        let at = parseInt(document.getElementById(`at_${i}`).value);
+        let bt = parseInt(document.getElementById(`bt_${i}`).value);
+
+        if (!pid) { 
+            showError(`Process ID at row ${i+1} cannot be empty.`); 
+            return; 
+        }
+        if (pids.has(pid)) { 
+            showError(`Duplicate Process ID found: "${pid}". All IDs must be unique.`); 
+            return; 
+        }
+        if (isNaN(at) || at < 0) { 
+            showError(`Arrival time for ${pid} must be a non-negative number.`); 
+            return; 
+        }
+        if (ats.has(at)) { 
+            showError(`Duplicate Arrival time found (${at}). In this simulator configuration, arrival times must be unique.`); 
+            return; 
+        }
+        if (isNaN(bt) || bt <= 0) { 
+            showError(`Burst time for ${pid} must be greater than 0.`); 
+            return; 
+        }
+
+        pids.add(pid);
+        ats.add(at);
+        processes.push({ pid, at, bt, originalIndex: i });
+    }
+
+    const choice = parseInt(document.getElementById('algorithm').value);
+
+    if (choice === 1) {
+        processes.sort((a, b) => a.at - b.at || a.originalIndex - b.originalIndex);
+        let currentTime = 0;
+        for (let p of processes) {
+            if (currentTime < p.at) {
+                currentTime = p.at;
+            }
+            p.st = currentTime;
+            p.ct = p.st + p.bt;
+            p.tat = p.ct - p.at;
+            p.wt = p.tat - p.bt;
+            currentTime = p.ct;
+        }
+    } else {
+        let currentTime = 0;
+        let completedCount = 0;
+        let uncompleted = processes.map(p => ({ ...p, completed: false }));
+        let executed = [];
+
+        while (completedCount < n) {
+            let available = uncompleted.filter(p => !p.completed && p.at <= currentTime);
+            
+            if (available.length === 0) {
+                let nextAt = Math.min(...uncompleted.filter(p => !p.completed).map(p => p.at));
+                currentTime = nextAt;
+                continue;
+            }
+
+            available.sort((a, b) => a.bt - b.bt || a.at - b.at || a.originalIndex - b.originalIndex);
+            let currentP = available[0];
+            
+            let targetIdx = uncompleted.findIndex(p => p.pid === currentP.pid);
+            if (currentTime < uncompleted[targetIdx].at) {
+                currentTime = uncompleted[targetIdx].at;
+            }
+            
+            uncompleted[targetIdx].st = currentTime;
+            uncompleted[targetIdx].ct = uncompleted[targetIdx].st + uncompleted[targetIdx].bt;
+            uncompleted[targetIdx].tat = uncompleted[targetIdx].ct - uncompleted[targetIdx].at;
+            uncompleted[targetIdx].wt = uncompleted[targetIdx].tat - uncompleted[targetIdx].bt;
+            uncompleted[targetIdx].completed = true;
+
+            currentTime = uncompleted[targetIdx].ct;
+            executed.push(uncompleted[targetIdx]);
+            completedCount++;
+        }
+        processes = executed;
+    }
+
+    let totalWt = processes.reduce((sum, p) => sum + p.wt, 0);
+    let totalTat = processes.reduce((sum, p) => sum + p.tat, 0);
+    document.getElementById('avgWtVal').innerText = (totalWt / n).toFixed(2) + ' ms';
+    document.getElementById('avgTatVal').innerText = (totalTat / n).toFixed(2) + ' ms';
+
+    let sortedByAt = [...processes].sort((a, b) => a.at - b.at || a.originalIndex - b.originalIndex);
+    let maxAt = sortedByAt[sortedByAt.length - 1].at;
+    let rqHtml = `<table><tr><th>Time (T)</th><th>Process ID</th><th>Burst Time (BT)</th></tr>`;
+    for (let t = 0; t <= maxAt; t++) {
+        let match = sortedByAt.find(p => p.at === t);
+        rqHtml += `<tr><td><b>${t}</b></td><td>${match ? `<span class="badge">${match.pid}</span>` : '-'}</td><td>${match ? match.bt : '-'}</td></tr>`;
+    }
+    rqHtml += `</table>`;
+    document.getElementById('rqTableContainer').innerHTML = rqHtml;
+
+    let ganttHtml = `<div class="gantt-container"><div class="gantt-timeline-track">`;
+    processes.forEach((p, idx) => {
+        let bgStyle = colorPalette[idx % colorPalette.length];
+        ganttHtml += `<div class="gantt-block" style="background: ${bgStyle};"><div class="pid">${p.pid}</div><div class="bt">BT: ${p.bt}</div></div>`;
+    });
+    ganttHtml += `</div><div class="gantt-axis"><span>${processes[0].st}</span>`;
+    processes.forEach(p => {
+        ganttHtml += `<span>${p.ct}</span>`;
+    });
+    ganttHtml += `</div></div>`;
+    document.getElementById('ganttContainer').innerHTML = ganttHtml;
+
+    let detailHtml = `<table><tr><th>Process ID</th><th>Arrival Time</th><th>Burst Time</th><th>Waiting Time</th><th>Turnaround Time</th></tr>`;
+    processes.forEach(p => {
+        detailHtml += `<tr><td><span class="badge">${p.pid}</span></td><td>${p.at}</td><td>${p.bt}</td><td>${p.wt}</td><td>${p.tat}</td></tr>`;
+    });
+    detailHtml += `</table>`;
+    document.getElementById('detailTableContainer').innerHTML = detailHtml;
+
+    document.getElementById('outputSection').style.display = 'block';
+    document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+window.onload = renderProcessInputs;
+</script>
+
+</body>
+</html>
